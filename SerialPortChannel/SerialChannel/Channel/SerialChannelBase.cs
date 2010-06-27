@@ -1,10 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.IO.Ports;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using System.IO.Ports;
+
 namespace SerialChannel.Channel
 {
+    /// <summary>
+    /// Abstract Serial Channel Base class. <br />
+    /// Creates serial port and performs read and write operations.
+    /// </summary>
     abstract class SerialChannelBase : ChannelBase
     {
         const int MaxBufferSize = 64 * 1024;
@@ -18,6 +23,15 @@ namespace SerialChannel.Channel
 
         SerialPort serialPort;
 
+        /// <summary>
+        /// SerialChannel Base
+        /// </summary>
+        /// <param name="bufferManager">Buffer manager created by factory and listener</param>
+        /// <param name="encoderFactory">Referece to encoder factory as returned by encoder element</param>
+        /// <param name="address">Remote address</param>
+        /// <param name="portNumber">COM port number</param>
+        /// <param name="parent">reference to factory/listener</param>
+        /// <param name="maxReceivedMessageSize">Some settings for transport channel</param>
         public SerialChannelBase(BufferManager bufferManager, 
             MessageEncoderFactory encoderFactory, 
             EndpointAddress address,
@@ -33,21 +47,27 @@ namespace SerialChannel.Channel
 
             this.portNumber = portNumber;
 
+            // Create port
             serialPort = new SerialPort();
 
-            // Allow the user to set the appropriate properties.
+            // Set the appropriate properties.
             serialPort.PortName = this.portNumber;
-            serialPort.BaudRate = 9600;
-            serialPort.Parity = Parity.None;
-            serialPort.DataBits = 8;
-            serialPort.StopBits = StopBits.One;
-            serialPort.Handshake = Handshake.None;
+            serialPort.BaudRate = 9600; //TODO: Allow users to specify this
+            serialPort.Parity = Parity.None; //TODO: Allow users to specify this
+            serialPort.DataBits = 8; //TODO: Allow users to specify this
+            serialPort.StopBits = StopBits.One; //TODO: Allow users to specify this
+            serialPort.Handshake = Handshake.None; //TODO: Allow users to specify this
 
             // Set the read/write timeouts
-            serialPort.ReadTimeout = 500;
-            serialPort.WriteTimeout = 500;
+            serialPort.ReadTimeout = 500; //TODO: Allow users to specify this
+            serialPort.WriteTimeout = 500; //TODO: Allow users to specify this
         }
 
+        /// <summary>
+        /// Wrap general expections as communication exceptions
+        /// </summary>
+        /// <param name="exception">Exception to be wrapped</param>
+        /// <returns>Return communication exception wrapped with general exception</returns>
         protected static Exception ConvertException(Exception exception)
         {
             Type exceptionType = exception.GetType();
@@ -60,16 +80,26 @@ namespace SerialChannel.Channel
             return new CommunicationException(exception.Message, exception);
         }
 
+        /// <summary>
+        /// Remote address used to filter messages
+        /// </summary>
         public EndpointAddress RemoteAddress
         {
             get { return this.address; }
         }
 
+        /// <summary>
+        /// Reference to Port. Used to handle open, close and other events in derived classes
+        /// </summary>
         public SerialPort Port
         {
             get { return serialPort; }
         }
 
+        /// <summary>
+        /// Read Message
+        /// </summary>
+        /// <returns>Message object constructed using data wrapped as SOAP message</returns>
         protected Message ReadMessage()
         {
             byte[] data;
@@ -93,7 +123,10 @@ namespace SerialChannel.Channel
             return this.encoder.ReadMessage(buffer, this.bufferManager);
         }
 
-        //protected void WriteMessage(string path, Message message)
+        /// <summary>
+        /// Data written to SOAP body before transmitting
+        /// </summary>
+        /// <param name="message"></param>
         protected void WriteMessage(Message message)
         {
             ArraySegment<byte> buffer;

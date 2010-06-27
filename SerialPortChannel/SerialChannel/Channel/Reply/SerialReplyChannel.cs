@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using SerialChannel.Channel.Listener;
 using System.Threading;
-using System.IO;
+using SerialChannel.Channel.Listener;
 
 namespace SerialChannel.Channel.Reply
 {
+    /// <summary>
+    /// Reply channel. Includes RequestContext as sub class
+    /// </summary>
     partial class SerialReplyChannel : SerialChannelBase , IReplyChannel
     {
         readonly EndpointAddress localAddress;
@@ -17,6 +17,14 @@ namespace SerialChannel.Channel.Reply
 
         AutoResetEvent aev;
 
+        /// <summary>
+        /// Constructor called by listener
+        /// </summary>
+        /// <param name="bufferManager">Buffer created by Listener</param>
+        /// <param name="encoderFactory">Encoder factory as received by encoding element</param>
+        /// <param name="address">Remote address</param>
+        /// <param name="portNumber">Server port</param>
+        /// <param name="parent">Reference to listner</param>
         public SerialReplyChannel(BufferManager bufferManager, MessageEncoderFactory encoderFactory, EndpointAddress address, string portNumber, 
            SerialReplyChannelListener parent)
             : base(bufferManager, encoderFactory, address, parent.PortNumber, parent, parent.MaxReceivedMessageSize)
@@ -25,15 +33,13 @@ namespace SerialChannel.Channel.Reply
             this.readLock = new object();
         }
 
-        protected override void OnAbort()
-        {
-            Console.WriteLine("SerialReplyChannel:OnAbort");
-        }
+        #region ICommunicationObject Members
 
-        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
+        #region Open Methods
+        protected override void OnOpen(TimeSpan timeout)
         {
-            Console.WriteLine("SerialReplyChannel:OnBeginClose");
-            throw new NotImplementedException();
+            Console.WriteLine("SerialReplyChannel:OnOpen");
+            Port.Open();
         }
 
         protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
@@ -42,42 +48,71 @@ namespace SerialChannel.Channel.Reply
             throw new NotImplementedException();
         }
 
+        protected override void OnEndOpen(IAsyncResult result)
+        {
+            Console.WriteLine("SerialReplyChannel:OnEndOpen");
+        }
+        #endregion
+
+        #region Close Methods
         protected override void OnClose(TimeSpan timeout)
         {
+            Console.WriteLine("SerialReplyChannel:OnClose");
             if (Port.IsOpen)
                 Port.Close();
-            Console.WriteLine("SerialReplyChannel:OnClose");
+        }
+
+        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("SerialReplyChannel:OnBeginClose");
+            throw new NotImplementedException();
         }
 
         protected override void OnEndClose(IAsyncResult result)
         {
             Console.WriteLine("SerialReplyChannel:OnEndClose");
         }
+        #endregion
 
-        protected override void OnEndOpen(IAsyncResult result)
+        #region Abort Methods
+        protected override void OnAbort()
         {
-            Console.WriteLine("SerialReplyChannel:OnEndOpen");
+            Console.WriteLine("SerialReplyChannel:OnAbort");
         }
+        #endregion
 
-        protected override void OnOpen(TimeSpan timeout)
-        {
-            Port.Open();
-            Console.WriteLine("SerialReplyChannel:OnOpen");
-        }
+        #endregion
 
         #region IReplyChannel Members
 
-        public IAsyncResult BeginReceiveRequest(TimeSpan timeout, AsyncCallback callback, object state)
+        #region TryReceiveRequest Methods
+
+        /// <summary>
+        /// Waits for request and then receives request.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="context"></param>
+        /// <returns>Return true if received else false.</returns>
+        public bool TryReceiveRequest(TimeSpan timeout, out RequestContext context)
         {
-            Console.WriteLine("SerialReplyChannel:BeginReceiveRequest");
-            throw new NotImplementedException();
+            context = null;
+            bool complete = WaitForRequest(timeout);
+            if (!complete)
+            {
+                return false;
+            }
+            context = ReceiveRequest(DefaultReceiveTimeout);
+            return true;
+
         }
 
-        public IAsyncResult BeginReceiveRequest(AsyncCallback callback, object state)
-        {
-            return BeginReceiveRequest(DefaultReceiveTimeout, callback, state);
-        }
-
+        /// <summary>
+        /// Waits for request and then receives request.
+        /// </summary>
+        /// <param name="timeout">Timeout for Receive</param>
+        /// <param name="callback">Asynchronouse call</param>
+        /// <param name="state">state</param>
+        /// <returns>Returns token</returns>
         public IAsyncResult BeginTryReceiveRequest(TimeSpan timeout, AsyncCallback callback, object state)
         {
             Console.WriteLine("BeginTryReceiveRequest");
@@ -112,18 +147,12 @@ namespace SerialChannel.Channel.Reply
 
         }
 
-        public IAsyncResult BeginWaitForRequest(TimeSpan timeout, AsyncCallback callback, object state)
-        {
-            Console.WriteLine("SerialReplyChannel:BeginWaitForRequest");
-            throw new NotImplementedException();
-        }
-
-        public RequestContext EndReceiveRequest(IAsyncResult result)
-        {
-            Console.WriteLine("SerialReplyChannel:EndReceiveRequest");
-            throw new NotImplementedException();
-        }
-
+        /// <summary>
+        /// End try receive request
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="context"></param>
+        /// <returns>Returns true of request received else false</returns>
         public bool EndTryReceiveRequest(IAsyncResult result, out RequestContext context)
         {
             Console.WriteLine("EndTryReceiveRequest");
@@ -138,45 +167,40 @@ namespace SerialChannel.Channel.Reply
 
         }
 
+
+        #endregion
+
+        #region WaitForRequest Methods
+        /// <summary>
+        /// Wait for request
+        /// </summary>
+        /// <param name="timeout">Timout for waiting thread</param>
+        /// <param name="callback">Asynchronous call back</param>
+        /// <param name="state">State</param>
+        /// <returns>Returns token</returns>
+        public IAsyncResult BeginWaitForRequest(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("SerialReplyChannel:BeginWaitForRequest");
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// End waiting request
+        /// </summary>
+        /// <param name="result">Token</param>
+        /// <returns>Retuns true of a new request is received else false.</returns>
         public bool EndWaitForRequest(IAsyncResult result)
         {
             Console.WriteLine("SerialReplyChannel:EndWaitForRequest");
+            //TODO:
             return true;
-       }
-
-        public EndpointAddress LocalAddress
-        {
-            get { return this.localAddress; }
         }
 
-        public RequestContext ReceiveRequest(TimeSpan timeout)
-        {
-            ThrowIfDisposedOrNotOpen();
-            lock (readLock)
-            {
-                Message message = ReadMessage();
-                return new SerialRequestContext(message, this);
-            }
-        }
-
-        public RequestContext ReceiveRequest()
-        {
-            return ReceiveRequest(DefaultReceiveTimeout);
-        }
-
-        public bool TryReceiveRequest(TimeSpan timeout, out RequestContext context)
-        {
-            context = null;
-            bool complete = WaitForRequest(timeout);
-            if (!complete)
-            {
-                return false;
-            }
-            context = ReceiveRequest(DefaultReceiveTimeout);
-            return true;
-
-        }
-
+        /// <summary>
+        /// Wait for request.
+        /// </summary>
+        /// <param name="timeout">Request timeout</param>
+        /// <returns>Return true if message is received. Else false. May throw Communication execeoption in case of error.</returns>
         public bool WaitForRequest(TimeSpan timeout)
         {
             ThrowIfDisposedOrNotOpen();
@@ -192,9 +216,86 @@ namespace SerialChannel.Channel.Reply
             }
         }
 
+        /// <summary>
+        /// Signal wait for request.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void Port_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             aev.Set();
+        }
+        #endregion
+
+        #region Receive Request
+        /// <summary>
+        /// Begin Request
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="callback"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public IAsyncResult BeginReceiveRequest(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("SerialReplyChannel:BeginReceiveRequest");
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public IAsyncResult BeginReceiveRequest(AsyncCallback callback, object state)
+        {
+            Console.WriteLine("SerialReplyChannel:BeginReceiveRequest");
+            //TODO: Not implemented
+            return BeginReceiveRequest(DefaultReceiveTimeout, callback, state);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public RequestContext EndReceiveRequest(IAsyncResult result)
+        {
+            Console.WriteLine("SerialReplyChannel:EndReceiveRequest");
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Receive Request
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public RequestContext ReceiveRequest(TimeSpan timeout)
+        {
+            ThrowIfDisposedOrNotOpen();
+            lock (readLock)
+            {
+                Message message = ReadMessage();
+                return new SerialRequestContext(message, this);
+            }
+        }
+
+        /// <summary>
+        /// Receive Request with default timeout
+        /// </summary>
+        /// <returns></returns>
+        public RequestContext ReceiveRequest()
+        {
+            return ReceiveRequest(DefaultReceiveTimeout);
+        }
+        #endregion
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public EndpointAddress LocalAddress
+        {
+            get { return this.localAddress; }
         }
 
         #endregion
@@ -205,7 +306,7 @@ namespace SerialChannel.Channel.Reply
     /// <summary>
     /// The result of an asynchronous operation.
     /// </summary>
-    public class ChannelAsyncResult : IAsyncResult, IDisposable
+    class ChannelAsyncResult : IAsyncResult, IDisposable
     {
         private AsyncCallback m_AsyncCallback;
         private object m_State;

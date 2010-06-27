@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ServiceModel.Channels;
-using System.Runtime.Remoting.Messaging;
-using SerialChannel.Binding.Transport;
-using System.Threading;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
+using System.Threading;
+using SerialChannel.Binding.Transport;
 using SerialChannel.Channel.Reply;
-using System.IO;
 
 namespace SerialChannel.Channel.Listener
 {
+    /// <summary>
+    /// Reply Channel Listener
+    /// </summary>
     class SerialReplyChannelListener : ChannelListenerBase, IChannelListener<IReplyChannel>
     {
         readonly BufferManager bufferManager;
@@ -103,19 +101,55 @@ namespace SerialChannel.Channel.Listener
 
         #endregion
 
+        #region ListnerBase members
         protected override IAsyncResult OnBeginWaitForChannel(TimeSpan timeout, AsyncCallback callback, object state)
         {
+            Console.WriteLine("SerialReplyChannelListener:OnBeginWaitForChannel");
             throw new NotImplementedException();
         }
 
         protected override bool OnEndWaitForChannel(IAsyncResult result)
         {
+            Console.WriteLine("SerialReplyChannelListener:OnEndWaitForChannel");
             throw new NotImplementedException();
         }
 
         protected override bool OnWaitForChannel(TimeSpan timeout)
         {
+            Console.WriteLine("SerialReplyChannelListener:OnWaitForChannel");
             throw new NotImplementedException();
+        }
+
+        protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("SerialReplyChannelListener:OnBeginOpen");
+            throw new NotImplementedException();
+        }
+
+        protected override void OnEndOpen(IAsyncResult result)
+        {
+            Console.WriteLine("SerialReplyChannelListener:OnEndOpen");
+        }
+
+        protected override void OnOpen(TimeSpan timeout)
+        {
+            Console.WriteLine("SerialReplyChannelListener:OnOpen");
+        }
+
+        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("SerialReplyChannelListener:OnBeginClose");
+            throw new NotImplementedException();
+        }
+
+        protected override void OnEndClose(IAsyncResult result)
+        {
+            Console.WriteLine("SerialReplyChannelListener:OnEndClose");
+        }
+
+        protected override void OnClose(TimeSpan timeout)
+        {
+            Console.WriteLine("SerialReplyChannelListener:OnClose");
         }
 
         public override Uri Uri
@@ -128,37 +162,7 @@ namespace SerialChannel.Channel.Listener
             Console.WriteLine("SerialReplyChannelListener:OnAbort");
         }
 
-        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
-        {
-            Console.WriteLine("SerialReplyChannelListener:OnBeginClose");
-            throw new NotImplementedException();
-        }
-
-        protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
-        {
-            Console.WriteLine("SerialReplyChannelListener:OnBeginOpen");
-            throw new NotImplementedException();
-        }
-
-        protected override void OnClose(TimeSpan timeout)
-        {
-            Console.WriteLine("SerialReplyChannelListener:OnClose");
-        }
-
-        protected override void OnEndClose(IAsyncResult result)
-        {
-            Console.WriteLine("SerialReplyChannelListener:OnEndClose");
-        }
-
-        protected override void OnEndOpen(IAsyncResult result)
-        {
-            Console.WriteLine("SerialReplyChannelListener:OnEndOpen");
-        }
-
-        protected override void OnOpen(TimeSpan timeout)
-        {
-            Console.WriteLine("SerialReplyChannelListener:OnOpen");
-        }
+        #endregion
     }
 
     /// <summary>

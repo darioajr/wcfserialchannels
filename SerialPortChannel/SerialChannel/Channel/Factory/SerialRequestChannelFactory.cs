@@ -8,6 +8,9 @@ using SerialChannel.Channel.Request;
 
 namespace SerialChannel.Channel.Factory
 {
+    /// <summary>
+    /// Request Channel Factory
+    /// </summary>
     class SerialRequestChannelFactory : ChannelFactoryBase, IChannelFactory<IRequestChannel>
     {
         readonly BufferManager bufferManager;
@@ -17,6 +20,11 @@ namespace SerialChannel.Channel.Factory
 
         public readonly string PortNumber;
 
+        /// <summary>
+        /// Constructor for request factory.
+        /// </summary>
+        /// <param name="transportElement"></param>
+        /// <param name="context"></param>
         public SerialRequestChannelFactory(SerialTransportBindingElement transportElement, BindingContext context)
             : base(context.Binding)
         {
@@ -28,6 +36,7 @@ namespace SerialChannel.Channel.Factory
             this.PortNumber = transportElement.FactoryPort;
         }
 
+        #region CommunicationObject Members
         protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
         {
             Console.WriteLine("SerialRequestChannelFactory:OnBeginOpen");
@@ -43,14 +52,26 @@ namespace SerialChannel.Channel.Factory
         {
             Console.WriteLine("SerialRequestChannelFactory:OnOpen");
         }
+        #endregion
 
         #region IChannelFactory<IReplyChannel> Members
 
+        /// <summary>
+        /// Create Channel
+        /// </summary>
+        /// <param name="to"></param>
+        /// <param name="via"></param>
+        /// <returns></returns>
         public IRequestChannel CreateChannel(System.ServiceModel.EndpointAddress to, Uri via)
         {
             return new SerialRequestChannel(this.bufferManager, this.encoderFactory, to,  this, via);
         }
 
+        /// <summary>
+        /// Create Channel
+        /// </summary>
+        /// <param name="to"></param>
+        /// <returns></returns>
         public IRequestChannel CreateChannel(System.ServiceModel.EndpointAddress to)
         {
             return new SerialRequestChannel(this.bufferManager, this.encoderFactory, to, this, new Uri("COM1"));

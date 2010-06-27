@@ -1,14 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ServiceModel.Channels;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 
 namespace SerialChannel.Channel.Reply
 {
+    /// <summary>
+    /// Request Context sub-class
+    /// </summary>
     partial class SerialReplyChannel
     {
+        /// <summary>
+        /// Sub-class to hold request context.
+        /// </summary>
         partial class SerialRequestContext : RequestContext
         {
             bool aborted;

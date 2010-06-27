@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ServiceModel.Channels;
-using System.ServiceModel;
-using SerialChannel.Channel.Factory;
 using System.IO;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Threading;
+using SerialChannel.Channel.Factory;
 
 namespace SerialChannel.Channel.Request
 {
+    /// <summary>
+    /// Channel fore request messages
+    /// </summary>
+    /// <remarks>Used by client side WCF runtime.</remarks>
     class SerialRequestChannel : SerialChannelBase, IRequestChannel
     {
         readonly Uri via;
@@ -17,6 +18,14 @@ namespace SerialChannel.Channel.Request
 
         AutoResetEvent aev;
 
+        /// <summary>
+        /// Constructor called by factory.
+        /// </summary>
+        /// <param name="bufferManager">Buffer manager used to send receive messages</param>
+        /// <param name="encoderFactory">Encoder factory as received by parent</param>
+        /// <param name="address">Remote address</param>
+        /// <param name="parent">Reference to parent</param>
+        /// <param name="via">via in case of routing</param>
         public SerialRequestChannel(BufferManager bufferManager, MessageEncoderFactory encoderFactory, EndpointAddress address, 
            SerialRequestChannelFactory parent, Uri via)
             : base(bufferManager, encoderFactory, address, parent.PortNumber, parent, parent.MaxReceivedMessageSize)
@@ -26,15 +35,12 @@ namespace SerialChannel.Channel.Request
         }
 
         #region ICommunicationObject Members
-        protected override void OnAbort()
+        
+        #region Open Methods
+        protected override void OnOpen(TimeSpan timeout)
         {
-            Console.WriteLine("SerialRequestChannel:OnAbort");
-        }
-
-        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
-        {
-            Console.WriteLine("SerialRequestChannel:OnBeginClose");
-            throw new NotImplementedException();
+            Console.WriteLine("SerialRequestChannel:OnOpen");
+            Port.Open();
         }
 
         protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
@@ -43,48 +49,86 @@ namespace SerialChannel.Channel.Request
             throw new NotImplementedException();
         }
 
+        protected override void OnEndOpen(IAsyncResult result)
+        {
+            Console.WriteLine("SerialRequestChannel:OnEndOpen");
+        }
+        #endregion
+
+        #region Close Methods
         protected override void OnClose(TimeSpan timeout)
         {
-            Port.Close();
             Console.WriteLine("SerialRequestChannel:OnClose");
+            Port.Close();
+        }
+
+        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            Console.WriteLine("SerialRequestChannel:OnBeginClose");
+            throw new NotImplementedException();
         }
 
         protected override void OnEndClose(IAsyncResult result)
         {
             Console.WriteLine("SerialRequestChannel:OnEndClose");
         }
+        #endregion
 
-        protected override void OnEndOpen(IAsyncResult result)
+        #region Abort
+        protected override void OnAbort()
         {
-            Console.WriteLine("SerialRequestChannel:OnEndOpen");
+            Console.WriteLine("SerialRequestChannel:OnAbort");
         }
+        #endregion
 
-        protected override void OnOpen(TimeSpan timeout)
-        {
-            Port.Open();
-            Console.WriteLine("SerialRequestChannel:OnOpen");
-        }
         #endregion
 
         #region IRequestChannel Members
 
+        /// <summary>
+        /// Asynchronous begin operation
+        /// </summary>
+        /// <param name="message">Message to be sent</param>
+        /// <param name="timeout">Timeout. If not specified defaults to DefaultReceiveTimeout of channel base </param>
+        /// <param name="callback">Callback when request is made in asynchronous mode.</param>
+        /// <param name="state">Object that contains state</param>
+        /// <returns>Return async token.</returns>
         public IAsyncResult BeginRequest(Message message, TimeSpan timeout, AsyncCallback callback, object state)
         {
             Console.WriteLine("SerialRequestChannel:BeginRequest");
+            //TODO: Recursive call. Fix it. For the moment control doesn't come here.
             return BeginRequest(message, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Asynchronous begin operation with default timeout of channel base
+        /// </summary>
+        /// <param name="message">Message to be sent</param>
+        /// <param name="callback">Callback when request is made in asynchronous mode.</param>
+        /// <param name="state">Object that contains state</param>
+        /// <returns>Return async token.</returns>
         public IAsyncResult BeginRequest(Message message, AsyncCallback callback, object state)
         {
             Console.WriteLine("SerialRequestChannel:BeginRequest - Default Timeout");
             return BeginRequest(message, DefaultReceiveTimeout, callback, state);
         }
 
+        /// <summary>
+        /// Returns Message when asynchronous operation is finished.
+        /// </summary>
+        /// <param name="result">Token recieved during BeginRequest Call</param>
+        /// <returns>Returns message.</returns>
         public Message EndRequest(IAsyncResult result)
         {
             return (Message)result.AsyncState;
         }
 
+        /// <summary>
+        /// Calls base class to perform write and read operations.
+        /// </summary>
+        /// <param name="message">Message to write</param>
+        /// <param name="timeout">Timout to write and read</param>
+        /// <returns>Returns reply if received else throws exception</returns>
         public Message Request(Message message, TimeSpan timeout)
         {
             ThrowIfDisposedOrNotOpen();
@@ -112,16 +156,29 @@ namespace SerialChannel.Channel.Request
 
         }
 
+        /// <summary>
+        /// Signal waiting thread in Read to continue execution.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void Port_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             aev.Set();
         }
 
+        /// <summary>
+        /// Sunchronous read with default time out
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public Message Request(Message message)
         {
             return Request(message, DefaultReceiveTimeout);
         }
 
+        /// <summary>
+        /// Interface property.
+        /// </summary>
         public Uri Via
         {
             get { return this.via; }
