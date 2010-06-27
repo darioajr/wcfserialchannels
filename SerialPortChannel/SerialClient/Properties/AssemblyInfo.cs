@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SerialClient")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("ABB")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SerialClient")]
-[assembly: AssemblyCopyright("Copyright © ABB 2010")]
+[assembly: AssemblyCopyright("Copyright © sriharsha.net 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
