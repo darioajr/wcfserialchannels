@@ -3,6 +3,10 @@ using System.IO;
 using System.IO.Ports;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Xml;
+using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Text;
 
 namespace SerialChannel.Channel
 {
@@ -20,6 +24,8 @@ namespace SerialChannel.Channel
         readonly MessageEncoder encoder;
         readonly long maxReceivedMessageSize;
         readonly string portNumber;
+
+        static string lastMessage = null;
 
         SerialPort serialPort;
 
@@ -102,6 +108,7 @@ namespace SerialChannel.Channel
         /// <returns>Message object constructed using data wrapped as SOAP message</returns>
         protected Message ReadMessage()
         {
+            
             byte[] data;
             int bytesRead = 0;
             try
@@ -119,7 +126,9 @@ namespace SerialChannel.Channel
             {
                 throw ConvertException(exception);
             }
-            ArraySegment<byte> buffer = new ArraySegment<byte>(data, 0, (int)bytesRead);
+
+            ArraySegment<byte> buffer = BuildReply(Encoding.UTF8.GetString(data,0,bytesRead));
+//            ArraySegment<byte> buffer = new ArraySegment<byte>(data, 0, (int)bytesRead);
             return this.encoder.ReadMessage(buffer, this.bufferManager);
         }
 
@@ -134,16 +143,94 @@ namespace SerialChannel.Channel
             {
                 this.address.ApplyTo(message);
                 buffer = this.encoder.WriteMessage(message, MaxBufferSize, this.bufferManager);
+
+                lastMessage = message.ToString();
             }
             try
             {
+                //Stream stream = serialPort.BaseStream;
+                //stream.Write(buffer.Array, buffer.Offset, buffer.Count);
+
+                MemoryStream ms = new MemoryStream(buffer.Array);
+                ms.Position = 0;
+
+                String bodyContent = null;
+
+                XmlTextReader xtr = new XmlTextReader(ms);
+
+                while (xtr.Read())
+                {
+                    if (xtr.Name == "request")
+                    {
+                        bodyContent = xtr.ReadElementContentAsString();
+                    }
+                }
+
+                xtr.Close();
+                ms.Close();
+
                 Stream stream = serialPort.BaseStream;
-                stream.Write(buffer.Array, buffer.Offset, buffer.Count);
+                byte [] bytes = Encoding.UTF8.GetBytes(bodyContent);
+                stream.Write(bytes, 0, bytes.Length);
             }
             catch (IOException exception)
             {
                 throw ConvertException(exception);
             }
+        }
+
+        ArraySegment<byte> BuildReply(string reply)
+        {
+            string action = null;
+            UniqueId messageId = null;
+            Uri to = null;
+            string ns = null;
+            string responseId = null;
+            string resultId = null;
+
+            Uri replyId = null;
+
+            MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(lastMessage));
+
+            XmlReader reader = XmlReader.Create(ms);
+
+            Message message = Message.CreateMessage(MessageVersion.Soap12WSAddressing10,
+                    null, reader);
+            
+            while (reader.Read())
+            {
+                if(reader.Name == "a:Action")
+                    action = reader.ReadElementContentAsString("Action", "http://www.w3.org/2005/08/addressing");
+                if (reader.Name == "a:MessageID")
+                    messageId = new UniqueId(reader.ReadElementContentAsString("MessageID", "http://www.w3.org/2005/08/addressing"));
+                if (reader.Name == "a:To")
+                    to = new Uri(reader.ReadElementContentAsString("To", "http://www.w3.org/2005/08/addressing"));
+            }
+            message.Headers.Clear();
+
+            message.Headers.Action = action + "Response";
+            message.Headers.RelatesTo = messageId;
+            message.Headers.To = to;
+
+            replyId = new Uri(action);
+            ns = replyId.Scheme + "://" + replyId.Host + "/";
+            responseId = replyId.Segments[replyId.Segments.Length - 1] + "Response";
+            resultId = replyId.Segments[replyId.Segments.Length - 1] + "Result";
+
+            XElement bodyContent = new XElement(XName.Get(responseId, ns),
+                    new XElement(XName.Get(resultId, ns), reply));
+
+            lastMessage = message.ToString();
+
+            XElement el = XElement.Parse(lastMessage);
+
+            el.Element(XName.Get("Body", "http://www.w3.org/2003/05/soap-envelope")).RemoveAll();
+            lastMessage = el.ToString();
+
+            string body = "<s:Body>\n" + bodyContent.ToString() + "\n</s:Body>";
+            lastMessage = lastMessage.Replace("<s:Body />", body);
+
+            return new ArraySegment<byte>(Encoding.UTF8.GetBytes(lastMessage));
         }
     }
 }
