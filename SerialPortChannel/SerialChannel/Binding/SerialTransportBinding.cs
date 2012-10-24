@@ -1,5 +1,6 @@
 ﻿using System.ServiceModel.Channels;
 using SerialChannel.Binding.Transport;
+using SerialChannel.Binding.Encoding;
 
 namespace SerialChannel.Binding
 {
@@ -15,26 +16,14 @@ namespace SerialChannel.Binding
         /// <summary>
         /// Default constructor. Creates encoding and transport binding elements.
         /// </summary>
-        public SerialTransportBinding()
+        public SerialTransportBinding(string port)
         {
-            this.messageElement = new TextMessageEncodingBindingElement();
-            this.transportElement = new SerialTransportBindingElement();
-        }
-
-        /// <summary>
-        /// COM port to be used on client side.
-        /// </summary>
-        public string FactoryPort
-        {
-            set { this.transportElement.FactoryPort = value; }
-        }
-
-        /// <summary>
-        /// COM port to be used on server side.
-        /// </summary>
-        public string ListenerPort
-        {
-            set { this.transportElement.ListenerPort = value; }
+          //this.messageElement = new TextMessageEncodingBindingElement();
+          this.messageElement =
+            new SerialEncoderBindingElement(
+              new TextMessageEncodingBindingElement());
+          this.transportElement = new SerialTransportBindingElement();
+          this.transportElement.FactoryPort = port;
         }
 
         /// <summary>
@@ -49,7 +38,7 @@ namespace SerialChannel.Binding
         }
 
         /// <summary>
-        /// We use a scheme like serial://localhost/???
+        /// We use a scheme serial
         /// </summary>
         public override string Scheme
         {

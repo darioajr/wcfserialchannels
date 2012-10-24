@@ -11,24 +11,24 @@ namespace SerialClient
             Uri uri = new Uri("serial://localhost/com7");
             Console.WriteLine("Creating factory...");
 
-            SerialTransportBinding binding = new SerialTransportBinding();
+            SerialTransportBinding binding = new SerialTransportBinding("COM8");
             
-            binding.FactoryPort = "COM8";
+            ChannelFactory<IFileTrasport> factory = 
+              new ChannelFactory<IFileTrasport>(binding);
 
-            ChannelFactory<IFileTrasport> factory = new ChannelFactory<IFileTrasport>(binding);
-            factory.Endpoint.Behaviors.Add(new ConsoleOutputBehavior());
-
-            IFileTrasport channel = factory.CreateChannel(new EndpointAddress(uri));
-            
+            IFileTrasport channel = 
+              factory.CreateChannel(new EndpointAddress(uri));
 
             Console.Write("Enter Text or x to quit: ");
             string message;
             while ((message = Console.ReadLine()) != "x")
             {
-                string result = channel.ProcessReflectRequest(message);
+              string result = channel.ProcessReflectRequest(message);
 
-                Console.WriteLine("Received : " + result + "\n");
-                Console.Write("Enter Text or x to quit: ");
+              Console.WriteLine("Received : " + result + "\n");
+              result = channel.ProcessDirectRequest(message);
+              Console.WriteLine("Received : " + result + "\n");
+              Console.Write("Enter Text or x to quit: ");
             }
 
             factory.Close();
@@ -40,5 +40,9 @@ namespace SerialClient
     {
         [OperationContract]
         string ProcessReflectRequest(string request);
+
+       [OperationContract]
+        string ProcessDirectRequest(string request);
+
     }
 }

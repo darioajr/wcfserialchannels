@@ -127,8 +127,8 @@ namespace SerialChannel.Channel
                 throw ConvertException(exception);
             }
 
-            ArraySegment<byte> buffer = BuildReply(Encoding.UTF8.GetString(data,0,bytesRead));
-//            ArraySegment<byte> buffer = new ArraySegment<byte>(data, 0, (int)bytesRead);
+            ArraySegment<byte> buffer = 
+              BuildReply(Encoding.UTF8.GetString(data,0,bytesRead));
             return this.encoder.ReadMessage(buffer, this.bufferManager);
         }
 

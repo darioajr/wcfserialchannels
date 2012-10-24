@@ -144,9 +144,15 @@ namespace SerialChannel.Channel.Request
                     Port.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(Port_DataReceived);
                     aev = new AutoResetEvent(false);
                     if (aev.WaitOne(timeout))
-                        return ReadMessage();
+                    {
+                      MessageBuffer buffer = 
+                        ReadMessage().CreateBufferedCopy(Int32.MaxValue);
+                      return buffer.CreateMessage();
+                    }
                     else
-                        throw ConvertException(new TimeoutException());
+                    {
+                      throw ConvertException(new TimeoutException());
+                    }
                 }
                 catch (IOException exception)
                 {
