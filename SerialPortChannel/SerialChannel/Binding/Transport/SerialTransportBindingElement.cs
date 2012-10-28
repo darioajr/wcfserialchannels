@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ServiceModel.Channels;
-using SerialChannel.Channel.Factory;
 
 namespace SerialChannel.Binding.Transport
 {
@@ -49,13 +48,19 @@ namespace SerialChannel.Binding.Transport
     }
 
     /// <summary>
-    /// Can build a channel factory if request channel is of type IRequestChannel.
+    /// Can build a channel factory if 
+    /// request channel is of type IRequestChannel.
     /// </summary>
-    /// <typeparam name="TChannel">Generic parameter for channel type</typeparam>
-    /// <param name="context">Binding context for which channel to be built</param>
-    /// <returns>Returns true if channel factory can be built for requested channel shape.</returns>
+    /// <typeparam name="TChannel">
+    /// Generic parameter for channel type</typeparam>
+    /// <param name="context">
+    /// Binding context for which channel to be built</param>
+    /// <returns>
+    /// Returns true if channel factory can be built 
+    /// for requested channel shape.</returns>
     /// <remarks>Gets called by client side WCF runtime</remarks>
-    public override bool CanBuildChannelFactory<TChannel>(BindingContext context)
+    public override bool CanBuildChannelFactory<TChannel>
+      (BindingContext context)
     {
       return typeof(TChannel) == typeof(IRequestChannel);
     }
@@ -63,11 +68,15 @@ namespace SerialChannel.Binding.Transport
     /// <summary>
     /// Build channel factory.
     /// </summary>
-    /// <typeparam name="TChannel">Shape of channel. Accepts IRequestChannel only.</typeparam>
+    /// <typeparam name="TChannel">
+    /// Shape of channel. Accepts IRequestChannel only.</typeparam>
     /// <param name="context">Binding context</param>
-    /// <returns>Returns an channel factory (SerialRequestChannelFactory) set to specified binding context </returns>
+    /// <returns>
+    /// Returns an channel factory (SerialRequestChannelFactory) 
+    /// set to specified binding context </returns>
     /// <remarks>Gets called by client side WCF runtime</remarks>
-    public override IChannelFactory<TChannel> BuildChannelFactory<TChannel>(BindingContext context)
+    public override IChannelFactory<TChannel> BuildChannelFactory<TChannel>
+      (BindingContext context)
     {
       if (context == null)
       {
@@ -75,10 +84,12 @@ namespace SerialChannel.Binding.Transport
       }
       if (!CanBuildChannelFactory<TChannel>(context))
       {
-        throw new ArgumentException(String.Format("Unsupported channel type: {0}.", typeof(TChannel).Name));
+        throw new ArgumentException(
+          String.Format("Unsupported channel type: {0}.", 
+          typeof(TChannel).Name));
       }
-      return (IChannelFactory<TChannel>)(object)new SerialRequestChannelFactory(this, context);
-
+      return (IChannelFactory<TChannel>)
+        (object)new SerialRequestChannelFactory(this, context);
     }
   }
 }

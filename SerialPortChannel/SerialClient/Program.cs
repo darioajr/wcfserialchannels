@@ -13,10 +13,10 @@ namespace SerialClient
 
             SerialTransportBinding binding = new SerialTransportBinding("COM8");
             
-            ChannelFactory<IFileTrasport> factory = 
-              new ChannelFactory<IFileTrasport>(binding);
+            ChannelFactory<ISerialTrasportDemo> factory = 
+              new ChannelFactory<ISerialTrasportDemo>(binding);
 
-            IFileTrasport channel = 
+            ISerialTrasportDemo channel = 
               factory.CreateChannel(new EndpointAddress(uri));
 
             Console.Write("Enter Text or x to quit: ");
@@ -25,9 +25,8 @@ namespace SerialClient
             {
               string result = channel.ProcessReflectRequest(message);
 
-              Console.WriteLine("Received : " + result + "\n");
-              result = channel.ProcessDirectRequest(message);
-              Console.WriteLine("Received : " + result + "\n");
+              Console.WriteLine(
+                "\nReceived for ProcessReflectRequest: " + result + "\n");
               Console.Write("Enter Text or x to quit: ");
             }
 
@@ -36,13 +35,9 @@ namespace SerialClient
     }
 
     [ServiceContract]
-    public interface IFileTrasport
+    public interface ISerialTrasportDemo
     {
         [OperationContract]
         string ProcessReflectRequest(string request);
-
-       [OperationContract]
-        string ProcessDirectRequest(string request);
-
     }
 }

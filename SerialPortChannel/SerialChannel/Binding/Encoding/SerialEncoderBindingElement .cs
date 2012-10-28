@@ -1,26 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ServiceModel.Channels;
+﻿using System.ServiceModel.Channels;
 
 namespace SerialChannel.Binding.Encoding
 {
   public class SerialEncoderBindingElement : MessageEncodingBindingElement
   {
-    readonly MessageEncodingBindingElement innerBindingElement;
-  
-    public SerialEncoderBindingElement(
-      MessageEncodingBindingElement innerBindingElement)
-      : base()
+    public SerialEncoderBindingElement() : base()
     {
-      this.innerBindingElement = innerBindingElement;
     }
 
     public override MessageVersion MessageVersion
     {
-      get { return this.innerBindingElement.MessageVersion; }
-      set { this.innerBindingElement.MessageVersion = value; }
+      get { return MessageVersion.Soap12WSAddressing10; }
+      set {}
     }
 
     public override IChannelFactory<TChannel> 
@@ -32,13 +23,12 @@ namespace SerialChannel.Binding.Encoding
 
     public override MessageEncoderFactory CreateMessageEncoderFactory()
     {
-      return new SerialMessageEncoderFactory(this, 
-        innerBindingElement.CreateMessageEncoderFactory());
+      return new SerialMessageEncoderFactory();
     }
 
     public override BindingElement Clone()
     {
-      return new SerialEncoderBindingElement(this);
+      return new SerialEncoderBindingElement();
     }
   }
 }

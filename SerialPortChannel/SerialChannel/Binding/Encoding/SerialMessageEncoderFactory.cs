@@ -1,23 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ServiceModel.Channels;
+﻿using System.ServiceModel.Channels;
 
 namespace SerialChannel.Binding.Encoding
 {
 
   class SerialMessageEncoderFactory : MessageEncoderFactory
   {
-    readonly SerialEncoder encoder;
-    readonly MessageEncoderFactory innerFactory;
+    readonly SerialMessageEncoder encoder;
 
-    public SerialMessageEncoderFactory(
-      SerialEncoderBindingElement bindingElement, 
-      MessageEncoderFactory innerFactory)
+    internal SerialMessageEncoderFactory()
     {
-      this.innerFactory = innerFactory;
-      this.encoder = new SerialEncoder(bindingElement, innerFactory.Encoder);
+      this.encoder = new SerialMessageEncoder(this);
     }
 
     public override MessageEncoder Encoder
@@ -25,9 +17,19 @@ namespace SerialChannel.Binding.Encoding
       get { return this.encoder; }
     }
 
+    public string ContentType
+    {
+      get { return string.Empty; }
+    }
+
+    public string MediaType
+    {
+      get { return string.Empty; }
+    }
+
     public override MessageVersion MessageVersion
     {
-      get { return this.innerFactory.MessageVersion; }
+      get { return MessageVersion.Default; }
     }
   }
 }

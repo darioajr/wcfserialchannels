@@ -1,6 +1,6 @@
 ﻿using System.ServiceModel.Channels;
-using SerialChannel.Binding.Transport;
 using SerialChannel.Binding.Encoding;
+using SerialChannel.Binding.Transport;
 
 namespace SerialChannel.Binding
 {
@@ -14,14 +14,14 @@ namespace SerialChannel.Binding
         readonly SerialTransportBindingElement transportElement;
 
         /// <summary>
-        /// Default constructor. Creates encoding and transport binding elements.
+        /// Default constructor. 
+        /// Creates encoding and transport binding elements.
         /// </summary>
         public SerialTransportBinding(string port)
         {
           //this.messageElement = new TextMessageEncodingBindingElement();
           this.messageElement =
-            new SerialEncoderBindingElement(
-              new TextMessageEncodingBindingElement());
+            new SerialEncoderBindingElement();
           this.transportElement = new SerialTransportBindingElement();
           this.transportElement.FactoryPort = port;
         }

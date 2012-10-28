@@ -75,14 +75,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Binding\Encoding\SerialEncoder.cs" />
+    <Compile Include="Binding\Encoding\SerialMessageEncoder.cs" />
     <Compile Include="Binding\Encoding\SerialEncoderBindingElement .cs" />
     <Compile Include="Binding\Encoding\SerialMessageEncoderFactory.cs" />
     <Compile Include="Binding\SerialTransportBinding.cs" />
     <Compile Include="Binding\Transport\SerialTransportBindingElement.cs" />
-    <Compile Include="Channel\Factory\SerialRequestChannelFactory.cs" />
-    <Compile Include="Channel\Request\SerialRequestChannel.cs" />
-    <Compile Include="Channel\SerialChannelBase.cs" />
+    <Compile Include="Binding\Transport\SerialRequestChannelFactory.cs" />
+    <Compile Include="Binding\Transport\SerialRequestChannel.cs" />
+    <Compile Include="Binding\Transport\SerialChannelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
