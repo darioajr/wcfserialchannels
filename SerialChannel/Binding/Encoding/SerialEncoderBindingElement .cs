@@ -10,7 +10,7 @@ namespace SerialChannel.Binding.Encoding
 
     public override MessageVersion MessageVersion
     {
-      get { return MessageVersion.Soap12WSAddressing10; }
+      get { return MessageVersion.None; }
       set {}
     }
 
@@ -23,7 +23,7 @@ namespace SerialChannel.Binding.Encoding
 
     public override MessageEncoderFactory CreateMessageEncoderFactory()
     {
-      return new SerialMessageEncoderFactory();
+      return new SerialMessageEncoderFactory(MessageVersion);
     }
 
     public override BindingElement Clone()

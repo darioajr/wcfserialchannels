@@ -6,9 +6,11 @@ namespace SerialChannel.Binding.Encoding
   class SerialMessageEncoderFactory : MessageEncoderFactory
   {
     readonly SerialMessageEncoder encoder;
+    MessageVersion messageVersion;
 
-    internal SerialMessageEncoderFactory()
+    internal SerialMessageEncoderFactory(MessageVersion messageVersion)
     {
+      this.messageVersion = messageVersion;
       this.encoder = new SerialMessageEncoder(this);
     }
 
@@ -29,7 +31,7 @@ namespace SerialChannel.Binding.Encoding
 
     public override MessageVersion MessageVersion
     {
-      get { return MessageVersion.Default; }
+      get { return messageVersion; }
     }
   }
 }

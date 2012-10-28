@@ -9,8 +9,8 @@ namespace SerialChannel.Binding.Encoding
   class SerialMessageEncoder : MessageEncoder
   {
     readonly SerialMessageEncoderFactory factory;
-
     static string lastMessage = null;
+
     public SerialMessageEncoder(SerialMessageEncoderFactory factory)
     {
       this.factory = factory;
@@ -54,7 +54,8 @@ namespace SerialChannel.Binding.Encoding
       int maxMessageSize, BufferManager bufferManager, int messageOffset)
     {
       String bodyContent = null;
-      lastMessage = message.ToString();
+
+      lastMessage = message.Headers.Action;
 
       XmlDictionaryReader reader = message.GetReaderAtBodyContents();
       while (reader.Read())
@@ -77,6 +78,7 @@ namespace SerialChannel.Binding.Encoding
       ArraySegment<byte> buffer =
         new ArraySegment<byte>(
           totalBytes, messageOffset, messageBytes.Length);
+
       return buffer;
     }
 
@@ -94,66 +96,27 @@ namespace SerialChannel.Binding.Encoding
     /// <returns></returns>
     ArraySegment<byte> BuildReply(ArraySegment<byte> buffer)
     {
-      string action = null;
-      UniqueId messageId = null;
-      Uri to = null;
-      string ns = null;
-      string responseId = null;
-      string resultId = null;
       Uri replyId = null;
+      string ns = null;
+      string operation = null;
+      
       string reply = System.Text.Encoding.UTF8.GetString(buffer.Array,
         buffer.Offset,buffer.Count);
 
-      MemoryStream ms = new MemoryStream(
-        System.Text.Encoding.UTF8.GetBytes(lastMessage));
+      Message message = 
+        Message.CreateMessage(this.MessageVersion, string.Empty);
 
-      XmlReader reader = XmlReader.Create(ms);
+      replyId = new Uri(lastMessage);
+      operation = replyId.Segments[replyId.Segments.Length - 1];
 
-      Message message = Message.CreateMessage
-        (this.MessageVersion, null, reader);
+      ns = replyId.Scheme + "://" + replyId.Host + "/";//TODO:Handle custom ns
 
-      while (reader.Read())
-      {
-        if (reader.Name == "a:Action")
-          action = reader.ReadElementContentAsString("Action",
-            "http://www.w3.org/2005/08/addressing");
-        if (reader.Name == "a:MessageID")
-          messageId = new UniqueId(
-            reader.ReadElementContentAsString("MessageID",
-            "http://www.w3.org/2005/08/addressing"));
-        if (reader.Name == "a:To")
-          to = new Uri(reader.ReadElementContentAsString("To",
-            "http://www.w3.org/2005/08/addressing"));
-      }
-      message.Headers.Clear();
-
-      message.Headers.Action = action + "Response";
-      message.Headers.RelatesTo = messageId;
-      message.Headers.To = to;
-
-      replyId = new Uri(action);
-      ns = replyId.Scheme + "://" + replyId.Host + "/";
-      responseId =
-        replyId.Segments[replyId.Segments.Length - 1] + "Response";
-      resultId =
-        replyId.Segments[replyId.Segments.Length - 1] + "Result";
-
-      XElement bodyContent = new XElement(XName.Get(responseId, ns),
-              new XElement(XName.Get(resultId, ns), reply));
-
-      lastMessage = message.ToString();
-
-      XElement el = XElement.Parse(lastMessage);
-
-      el.Element(XName.Get("Body",
-        "http://www.w3.org/2003/05/soap-envelope")).RemoveAll();
-      lastMessage = el.ToString();
-
-      string body = "<s:Body>\n" + bodyContent.ToString() + "\n</s:Body>";
-      lastMessage = lastMessage.Replace("<s:Body />", body);
+      XElement body = 
+        new XElement(XName.Get(operation + "Response", ns),
+              new XElement(XName.Get(operation + "Result", ns), reply));
 
       return new ArraySegment<byte>(
-        System.Text.Encoding.UTF8.GetBytes(lastMessage));
+        System.Text.Encoding.UTF8.GetBytes(body.ToString()));
     }
   }
 }

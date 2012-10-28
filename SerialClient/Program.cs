@@ -23,7 +23,7 @@ namespace SerialClient
             string message;
             while ((message = Console.ReadLine()) != "x")
             {
-              string result = channel.ProcessReflectRequest(message);
+              string result = channel.Reflect(message);
 
               Console.WriteLine(
                 "\nReceived for ProcessReflectRequest: " + result + "\n");
@@ -34,10 +34,10 @@ namespace SerialClient
         }
     }
 
-    [ServiceContract]
+    [ServiceContract]//(Namespace="serial://demo/")]
     public interface ISerialTrasportDemo
     {
         [OperationContract]
-        string ProcessReflectRequest(string request);
+        string Reflect(string request);
     }
 }
